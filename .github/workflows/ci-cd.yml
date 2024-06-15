@@ -59,10 +59,6 @@ jobs:
     - name: Bump version and create tag
       id: bump_version
       run: |
-        # Incrementar a versão no package.json
-        $currentVersion = (Get-Content package.json | ConvertFrom-Json).version
-        $newVersion = ($currentVersion -replace '(\d+)$', { [int]$args[0] + 1 }) -f ([regex]::Escape($currentVersion -replace '\d+$'))
-        (Get-Content package.json) -replace '"version": "' + $currentVersion + '"', '"version": "' + $newVersion + '"' | Set-Content package.json
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git add package.json
