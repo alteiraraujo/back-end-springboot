@@ -21,6 +21,9 @@ jobs:
       with:
         dotnet-version: '5.0.x'  # Substitua pela versão necessária
 
+    - name: Change directory to src
+      run: cd src
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -37,6 +40,9 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
+
+    - name: Change directory to src
+      run: cd src
 
     - name: Deploy to IIS
       run: |
@@ -56,6 +62,9 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
+    - name: Change directory to src
+      run: cd src
+
     - name: Bump version and create tag
       id: bump_version
       run: |
@@ -74,7 +83,7 @@ jobs:
     - name: Create GitHub release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ steps.bump_version.outputs.version }}
+        tag_name: v${{ steps.bump_version.outputs.version }}
         release_name: Release ${{ steps.bump_version.outputs.version }}
         body: |
           Changes in this release:
@@ -83,4 +92,3 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
