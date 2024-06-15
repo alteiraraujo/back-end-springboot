@@ -16,22 +16,19 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    - name: Set up .NET Core
-      uses: actions/setup-dotnet@v1
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
       with:
-        dotnet-version: '5.0.x'  # Substitua pela versão necessária
+        node-version: '18'  # Substitua pela versão necessária
 
-    - name: Change directory to src
-      run: cd src
-
-    - name: Restore dependencies
-      run: dotnet restore
+    - name: Install dependencies
+      run: npm install
 
     - name: Build application
-      run: dotnet build --configuration Release --no-restore
+      run: npm run build  # Substitua conforme seu script de build
 
     - name: Run tests
-      run: dotnet test --no-restore --verbosity normal
+      run: npm test
 
   deploy:
     needs: build
@@ -41,14 +38,11 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    - name: Change directory to src
-      run: cd src
-
     - name: Deploy to IIS
       run: |
         # Comandos para deploy usando IIS no Windows
         # Exemplo:
-        # - Copie os arquivos para o diretório de publicação do IIS
+        # - Copie os arquivos de build para o diretório de publicação do IIS
         # - Reinicie o site no IIS
         Copy-Item -Path "path\to\build\output" -Destination "C:\inetpub\wwwroot\your-site" -Recurse -Force
         Import-Module WebAdministration
@@ -62,22 +56,18 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    - name: Change directory to src
-      run: cd src
-
     - name: Bump version and create tag
       id: bump_version
       run: |
-        # Incrementar a versão no arquivo de projeto
-        $version = "1.0.$(date +'%Y%m%d%H%M')"
-        [xml]$xml = Get-Content "YourProjectFile.csproj"
-        $xml.Project.PropertyGroup.Version = $version
-        $xml.Save("YourProjectFile.csproj")
+        # Incrementar a versão no package.json
+        $currentVersion = (Get-Content package.json | ConvertFrom-Json).version
+        $newVersion = ($currentVersion -replace '(\d+)$', { [int]$args[0] + 1 }) -f ([regex]::Escape($currentVersion -replace '\d+$'))
+        (Get-Content package.json) -replace '"version": "' + $currentVersion + '"', '"version": "' + $newVersion + '"' | Set-Content package.json
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
-        git add YourProjectFile.csproj
-        git commit -m "Bump version to $version"
-        git tag "v$version"
+        git add package.json
+        git commit -m "Bump version to $newVersion"
+        git tag "v$newVersion"
         git push origin main --tags
 
     - name: Create GitHub release
